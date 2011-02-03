@@ -5,14 +5,14 @@ import datetime
 import os
 import sqlite3
 
-def open_db(dbname="occDB.sqlite3"):
+def open_db(dbname="DB.sqlite3"):
     if not os.path.isfile(dbname):
         print "SQLite database %s does not exist. Creating it." % dbname
         # raise Exception, "SQLite database %s does not exist."
     conn = sqlite3.connect(dbname)
     return conn
 
-def create_table_if_not_exists(conn, tablename="POOP", schema=None):
+def create_table_if_not_exists(conn, tablename="TEST", schema=None):
     """Wrapper for SQLite's conditional table creation.
 
        If table does not exist, create it.
@@ -56,7 +56,6 @@ def create_table_if_not_exists(conn, tablename="POOP", schema=None):
     else:
         raise Exception, "Unable to determine schema for table creation"
     sql = """CREATE TABLE IF NOT EXISTS %s (%s)""" % (tablename, schema_string)
-    print sql
     conn.cursor().execute(sql)
 
 def insert_record(conn, tablename, headers, values):
@@ -99,10 +98,10 @@ def insert_csv_to_sqlite3(conn, fields, content, data_has_headers=False):
 
 if __name__ == "__main__":
     conn = open_db()
-    create_table_if_not_exists(conn, tablename="POOP")
+    create_table_if_not_exists(conn, tablename="TEST")
     headers = ["quantity", "underlying", "symbol", "actype", "porc", "exchange", "actdate"]
     values = [10, 1310.2, "SPX", "Customer", "C", "CBOE", datetime.date(2011,7,22)]
-    tablename = "POOP"
+    tablename = "TEST"
     insert_record(conn, tablename, headers, values)
     conn.commit() # close db
     conn.cursor().close()
