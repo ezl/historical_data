@@ -1,0 +1,8 @@
+Corn.csv            Full CSV file from the CME containing all Corn data (futures, options, calendar spreads) from 1972-> 2010
+cornDB.sqlite3      Full CME file dumped to sqlite
+
+    Note: Corn.csv has 1,673,060 rows.
+          There are 4 contract types "C" == Corn Futures (count=)
+                                     "PY" == Corn Options (count=1562959)
+                                     "CCZ" == Calendar spread options? (count=72)
+                                     "8CC" == Calendar spread options? (count=336)
