@@ -93,14 +93,18 @@ if __name__ == "__main__":
     with open(source_csv, "r") as f:
         rows = f.readlines()
         for r in rows:
+            values = parse_cme_row(r)
             # some filters, determiend by trial and error
-            if rows[2] == "E":
+            if r.split(",")[2] == "E":
                 # E == electronic, R == pit.  Electronic values are garbage for close.
+                continue
+            if values[1] == "8CC" or values[1] == "CCZ":
+                # Don't care about these, calendar spreads/calendar spread options?
                 continue
 
 
+            # if its not discarded already, insert it.
 
-            values = parse_cme_row(r)
             if values[1] == "C":
                 #Future
                 insert_record(conn, "Futures", headers, values)
