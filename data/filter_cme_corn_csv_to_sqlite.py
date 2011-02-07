@@ -5,7 +5,7 @@
    File dumps data into a new SQLite file with 2 tables: Futures (product_symbol==C), Options (product_symbol==PY). 8CC and CCZ are discarded.
 """
 
-from tools.sqliteutils import open_db, create_table_if_not_exists, insert_record
+from bananas.db.sqliteutils import open_db, create_table_if_not_exists, insert_record
 import sys
 import datetime
 
@@ -57,13 +57,13 @@ def parse_cme_row(row):
 cme_sample_row = "010311,PY,R,P,12,0,2012,450.0000000,,.0000000,,.0000000,,.00000000,,.00000000,N,501.00000000,,.00000000,,524.00000000,.0000000,108.000000,0,.306303,CBT"
 
 if __name__ == "__main__":
-    source_csv = "data/Corn.csv"
+    source_csv = "Corn.csv"
     dbname = "filteredcornDB.sqlite3"
     conn = open_db(dbname)
-    headers = ["trade_date",
+    headers = ["trade_date date",
                "product_symbol",
                "fut_opt_indicator",
-               "exp_date",
+               "exp_date date",
                "strike",
                "px_open",
                "px_high",
@@ -77,9 +77,29 @@ if __name__ == "__main__":
     for table in tables:
         create_table_if_not_exists(conn, tablename=table, schema=", ".join(headers))
 
+    headers = ["trade_date",
+               "product_symbol",
+               "fut_opt_indicator",
+               "exp_date",
+               "strike",
+               "px_open",
+               "px_high",
+               "px_low",
+               "px_close",
+               "px_settle",
+               "volume",
+               "imp_volatility",
+              ]
     with open(source_csv, "r") as f:
         rows = f.readlines()
         for r in rows:
+            # some filters, determiend by trial and error
+            if rows[2] == "E":
+                # E == electronic, R == pit.  Electronic values are garbage for close.
+                continue
+
+
+
             values = parse_cme_row(r)
             if values[1] == "C":
                 #Future

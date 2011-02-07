@@ -10,7 +10,7 @@ def open_db(dbname=None):
         pass
         # print "SQLite database %s does not exist. Creating it." % dbname
         # raise Exception, "SQLite database %s does not exist."
-    conn = sqlite3.connect(dbname)
+    conn = sqlite3.connect(dbname, detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES)
     return conn
 
 def create_table_if_not_exists(conn, tablename, schema):
@@ -49,7 +49,9 @@ def create_table_if_not_exists(conn, tablename, schema):
         schema_string = schema
     else:
         raise Exception, "Unable to determine schema for table creation"
-    sql = """CREATE TABLE IF NOT EXISTS %s (%s)""" % (tablename, schema_string)
+    sql = """CREATE TABLE IF NOT EXISTS %s(%s)""" % (tablename, schema_string)
+    # import pdb
+    # pdb.set_trace()
     conn.cursor().execute(sql)
     return None
 
@@ -62,7 +64,7 @@ def insert_record(conn, tablename, headers, values):
        by using bad practice.
     """
     sql = """INSERT INTO %s(%s) VALUES (%s)""" % (tablename, ", ".join(headers), ", ".join(["?",] * len(values)))
-    conn.cursor().execute(sql, values)
+    conn.cursor().execute(sql, tuple(values))
     return None
 
 if __name__ == "__main__":

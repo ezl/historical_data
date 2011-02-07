@@ -1,10 +1,10 @@
-from sqliteutils import open_db, create_table_if_not_exists, insert_record
+from bananas.db.sqliteutils import open_db, create_table_if_not_exists, insert_record
 
 if __name__ == "__main__":
     """Dump the total CME corn datamine csv into a big sqlite file"""
 
-    cme_csv = "data/Corn.csv"
-    dbname = "data/cornDB.sqlite3"
+    cme_csv = "Corn.csv"
+    dbname = "cornDB.sqlite3"
     # CME Group End-of-Day Record Layout Guide (CSV format)
     # source: http://www.cmegroup.com/market-data/datamine-historical-data/files/EODLayoutGuideCSV.pdf
     headers = ["trade_date",
