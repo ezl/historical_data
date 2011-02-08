@@ -5,7 +5,7 @@ import datetime
 import pdb
 
 dbname = "data/filteredcornDB.sqlite3"
-start_date = datetime.date(2000, 1, 1)
+start_date = datetime.date(2010, 1, 14)
 
 conn = open_db(dbname)
 
@@ -68,12 +68,13 @@ def linear_interpolation_for_synthetic_maturity_future(days, trade_date, expirat
     return synth_fut
 
 
-records = []
-for trade_date in trade_dates:
-    df = execute_query_DF(conn, SQL_get_futures_for_trade_date % trade_date)
-    closes = df("px_close")
-    settles = df("px_settle")
-    prices = closes
-    expiration_dates = df("exp_date")
-    synth = get_synthetic_maturity_future(days=90, trade_date=trade_date, expiration_dates=expiration_dates,prices=prices)
-    records.append((trade_date, synth))
+if __name__ == "__main__":
+    records = []
+    for trade_date in trade_dates:
+        df = execute_query_DF(conn, SQL_get_futures_for_trade_date % trade_date)
+        closes = df("px_close")
+        settles = df("px_settle")
+        prices = settles
+        expiration_dates = df("exp_date")
+        synth = get_synthetic_maturity_future(days=90, trade_date=trade_date, expiration_dates=expiration_dates, prices=prices)
+        records.append((trade_date, synth))
