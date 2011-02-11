@@ -2,6 +2,7 @@ import numpy as np
 from bananas.db.sqliteutils import open_db, create_table_if_not_exists, insert_record
 from bananas.dataframe.dataframe import dataframe, execute_query_DF
 import datetime
+from bananas.ipshell import ipshell
 import pdb
 
 dbname = "data/filteredcornDB.sqlite3"
@@ -46,7 +47,10 @@ def get_synthetic_maturity_future(days, trade_date, expiration_dates, prices):
            synth_fut:         <float> the n-day maturity synthetic forward price.
     """
     if any(prices==0):
-        return -999999999
+        # print "days, trade_date, expiration_dates, prices"
+        # ipshell()
+        print "ERROR: ZERO ZERO ZERO"
+        # return -999999999
     return linear_interpolation_for_synthetic_maturity_future(days, trade_date, expiration_dates, prices)
 
 def linear_interpolation_for_synthetic_maturity_future(days, trade_date, expiration_dates, prices):
