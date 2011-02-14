@@ -67,8 +67,8 @@ end_date = datetime.date(2011, 1, 10)
 # end_date = datetime.date(1997, 6, 10)
 
 """ TEST"""
-# start_date = datetime.date(1992, 4, 1)
-# end_date = datetime.date(1992, 6, 10)
+# start_date = datetime.date(1991, 1, 10)
+# end_date = datetime.date(1993, 1, 23)
 
 conn = open_db(dbname)
 
@@ -86,16 +86,16 @@ trade_date_list = []
 
 
 # to calculate historical realized vol
-synth_fut_list = []
 
 pyplot.ion()
 ax = pyplot.subplot(111)
 line, = pyplot.plot(0, 0, "bo")
 dot, = pyplot.plot(0, 0, "ro")
 
-interval = 0
+interval = 0.
 ylim_window = 12
-synth_maturity = 100
+synth_maturities = [100, 200, 300]
+synth_fut_dict = dict( (synth_maturity, []) for synth_maturity in synth_maturities)
 DEBUG = False
 
 for trade_date in trade_dates:
@@ -112,40 +112,55 @@ for trade_date in trade_dates:
     prices = settles
     expiration_dates = df("exp_date")
 
-    if trade_date == datetime.date(1997, 1, 20):
-        pass
-        # weird day.
-        # ipshell()
-
+#     if abs( (trade_date - datetime.date(1991, 4, 11)).days ) <= 1:
+#         pass
+#         # weird day.
+#         ipshell()
+# 
 
     bad_prints = (prices > 8000) + (prices < 10)
     if any(bad_prints):
-        print "-" * 20
-        print expiration_dates
-        print prices
+        # print "-" * 20
+        # print expiration_dates
+        # print prices
         prices = prices[-bad_prints]
         expiration_dates = expiration_dates[-bad_prints]
 
     if all(bad_prints):
-        trade_dates = trade_dates[trade_dates != trade_date]
-        continue
-    # this is a hacky way to thow away some of the bad data.  just assuming zero vol on zero price days or stupid price days. (copy last days price)
-    synth_fut = get_synthetic_maturity_future(days=synth_maturity, trade_date=trade_date, expiration_dates=expiration_dates, prices=prices)
-    if synth_fut < 10 or synth_fut > 10000:
-        synth_fut_list.append(synth_fut_list[-1]) # or NANNNANANANANNNANANNANNANNANNNANNNANNNAN
-    else:
-        synth_fut_list.append(synth_fut)
+        print "ALL BAD PRINTS!"
+        # ipshell("ALL BAD PRINTS")
+
+        trade_dates = trade_dates[trade_dates != trade_date] # strip out the trade date altogether
+        continue                                             # and don't record anything for this day
+
+    for synth_maturity in synth_maturities:
+        synth_fut = get_synthetic_maturity_future(days=synth_maturity,
+                                                  trade_date=trade_date,
+                                                  expiration_dates=expiration_dates,
+                                                  prices=prices)
+
+        # this is a hacky way to thow away some of the bad data.  just assuming zero vol on zero price days or stupid price days. (copy last days price)
+        if synth_fut < 10 or synth_fut > 10000:
+            print "GARBAGE GARBAGE GARBAGE\n" *10
+            time.sleep(5)
+            synth_fut_dict[synth_maturity].append(25000) # for now just to identify the shitty days
+            # synth_fut_list.append(synth_fut_list[-1]) # or NANNNANANANANNNANANNANNANNANNNANNNANNNAN
+        else:
+            synth_fut_dict[synth_maturity].append(synth_fut)
 
     expiration_dates_list.append(expiration_dates)
     prices_list.append(prices)
     trade_date_list.append(trade_date)
-    print trade_date
+    print trade_date, synth_fut
 
     ax.set_title(trade_date)
     line.set_xdata(expiration_dates)
     line.set_ydata(prices)
-    dot.set_xdata([trade_date + datetime.timedelta(days=synth_maturity), ])
-    dot.set_ydata([synth_fut, ])
+    # print [trade_date + datetime.timedelta(days=synth_maturity) for synth_maturity in synth_maturities ]
+    # print synth_fut
+    dot.set_xdata([trade_date + datetime.timedelta(days=synth_maturity) for synth_maturity in synth_maturities ])
+    dot.set_ydata([synth_fut_dict[synth_maturity][-1] for synth_maturity in synth_maturities])
+    # ipshell()
 
     xmin = trade_date - datetime.timedelta(days=30)
     xmax = np.max(expiration_dates) + datetime.timedelta(days=30)
@@ -159,16 +174,52 @@ for trade_date in trade_dates:
     pyplot.draw()
     time.sleep(interval)
 
-# calculate historical realized vo
+def get_realized_vol(prices, trade_dates, vol_window, trading_days=252.0, weekend=0.16):
+    """Just doing even distribution of voltime right now.
+       Return a list of hist vols that can be plotted by matplotlib
+       pad the first days where vol can't be calculated with nans
+    """
+    days_per_year = trading_days + (365.0-trading_days) * weekend
+    logdiffs = np.hstack((np.nan, np.diff(np.log(np.array(prices))) ** 2))
+    historical_vol = np.hstack(( np.nan * np.ones(vol_window -1),
+                                 np.sqrt(np.convolve(logdiffs, np.ones(vol_window), mode="valid") * days_per_year / vol_window )
+                               ))
+    return historical_vol
+
+# calculate historical realized vol
 vol_window = 22 # trading days
-days_per_year = 270.08
-trade_dates,
-logdiffs = np.hstack((np.nan, np.diff(np.log(np.array(synth_fut_list))) ** 2))
-historical_vol = np.hstack((np.nan * np.ones(vol_window -1)     ,   np.sqrt(np.convolve(logdiffs, np.ones(vol_window), mode="valid") * days_per_year / vol_window ) ))
+# days_per_year = 270.08
+# trade_dates,
+# logdiffs = np.hstack((np.nan, np.diff(np.log(np.array(synth_fut_list))) ** 2))
+# historical_vol = np.hstack((np.nan * np.ones(vol_window -1)     ,   np.sqrt(np.convolve(logdiffs, np.ones(vol_window), mode="valid") * days_per_year / vol_window ) ))
+historical_vol = dict()
+historical_vol[100] = get_realized_vol(prices=synth_fut_dict[100], trade_dates=trade_dates, vol_window=vol_window)
+historical_vol[200] = get_realized_vol(prices=synth_fut_dict[200], trade_dates=trade_dates, vol_window=vol_window)
+historical_vol[300] = get_realized_vol(prices=synth_fut_dict[300], trade_dates=trade_dates, vol_window=vol_window)
 
-pyplot.plot(trade_dates, historical_vol, "r-")
 pyplot.figure()
-pyplot.plot(trade_dates, synth_fut_list)
+pyplot.plot(trade_dates, historical_vol[100], "r-")
+pyplot.plot(trade_dates, historical_vol[200], "b-")
+pyplot.plot(trade_dates, historical_vol[300], "k-")
+pyplot.figure()
+pyplot.plot(trade_dates, synth_fut_dict[100])
 
-# from anim import animate
-# animate(x_list=expiration_dates_list, y_list=prices_list, title_list=trade_date_list, interval=0.25)
+
+# lets look at seasonality
+
+years = np.array([trade_date.year for trade_date in trade_dates])
+trailing_vol = dict( (year, historical_vol[100][years==year]) for year in set(years) )
+average_trailing_vol = dict( (year, trailing_vol[year][-np.isnan(trailing_vol[year])].mean()) for year in set(years) )
+demeaned_trailing_vol = dict( (year, trailing_vol[year] - average_trailing_vol[year]) for year in set(years) )
+
+## create fake year data. map all dates to an arbitrary year.
+
+synthetic_year = dict( (year,
+                        np.array([datetime.date(2196, trade_date.month, trade_date.day)
+                                  for trade_date in trade_dates if trade_date.year==year
+                                 ]) 
+                       ) for year in set(years))
+
+pyplot.figure()
+for year in set(years):
+    pyplot.plot(synthetic_year[year], demeaned_trailing_vol[year], "o")

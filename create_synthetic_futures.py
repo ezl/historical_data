@@ -65,10 +65,23 @@ def linear_interpolation_for_synthetic_maturity_future(days, trade_date, expirat
              though for only a 90 day interpolated price for hist vol studies.
     """
     dte = [i.days for i in (expiration_dates - trade_date)]
+    if not all(np.diff(dte) >= 0):
+        print "DATES NOT ORDERED WELL"
+        print expiration_dates
+        print prices
+        ipshell()
     try:
         synth_fut = np.interp(days, dte, prices)
+        # print "-" *20
+        # print "synth fut, days: %s, %s" % (synth_fut, days)
+        # print "dte: %s" % dte
+        # print "pxs: %s" % prices
+        # ipshell()
     except:
-        pdb.set_trace()
+        print "-" *20
+        print "dte: %s" % dte
+        print "pxs: %s" % prices
+        ipshell()
     return synth_fut
 
 
