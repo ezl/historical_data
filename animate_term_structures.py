@@ -59,7 +59,7 @@ freeze_dates = [datetime.date(1996,4,4),
                ]
 
 dbname = "data/filteredcornDB.sqlite3"
-start_date = datetime.date(1980, 1, 1)
+start_date = datetime.date(1990, 1, 1)
 end_date = datetime.date(2011, 1, 10)
 
 """ Shitty period with doubled up contracts of weird prices"""
@@ -223,3 +223,23 @@ synthetic_year = dict( (year,
 pyplot.figure()
 for year in set(years):
     pyplot.plot(synthetic_year[year], demeaned_trailing_vol[year], "o")
+
+
+all_vols = historical_vol[100][-np.isnan(historical_vol[100])]
+all_dates = np.array([datetime.date(2196, trade_date.month, trade_date.day) for trade_date in trade_dates[-np.isnan(historical_vol[100])]])
+
+# compute stats on each "day"
+
+combined_year = list(set(all_dates))
+grouped_vols = [all_vols[all_dates==d] for d in combined_year]
+
+avg_vols = np.array([i.mean() for i in grouped_vols])
+std_vols = np.array([i.std() for i in grouped_vols])
+
+pyplot.figure()
+pyplot.plot(combined_year, avg_vols, "ko")
+pyplot.plot(combined_year, avg_vols + 0.5 * std_vols, "ro")
+pyplot.plot(combined_year, avg_vols - 0.5 * std_vols, "ro")
+
+
+
